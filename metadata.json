@@ -1,0 +1,5 @@
+{
+  "name": "Mástil Interactivo de Guitarra",
+  "description": "Una aplicación web para visualizar intervalos musicales en un mástil de guitarra. Elige una nota tónica y explora las relaciones de las notas para aprender escalas y acordes fácilmente.",
+  "requestFramePermissions": []
+}
