@@ -1,84 +1,101 @@
-export const NOTES = [
-  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'
-] as const;
 
-export type ScaleName = 'Jónico (Mayor)' | 'Dórico' | 'Frigio' | 'Lidio' | 'Mixolidio' | 'Eólico (Menor)' | 'Locrio' | 'Pentatónica Menor' | 'Pentatónica Mayor' | 'Blues';
+export type Theme = 'light' | 'dark';
+
+export const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
+
+export const FRET_COUNT = 22;
+export const STANDARD_TUNING = ['E', 'A', 'D', 'G', 'B', 'E'] as const;
+
+export const INTERVAL_NAMES = ['R', 'm2', 'M2', 'm3', 'M3', 'P4', 'TT', 'P5', 'm6', 'M6', 'm7', 'M7'] as const;
+export type IntervalName = typeof INTERVAL_NAMES[number];
+
+export const INTERVAL_FULL_NAMES: Record<IntervalName, string> = {
+    'R': 'Raíz (Root)',
+    'm2': 'Segunda menor',
+    'M2': 'Segunda Mayor',
+    'm3': 'Tercera menor',
+    'M3': 'Tercera Mayor',
+    'P4': 'Cuarta Perfecta',
+    'TT': 'Tritono (Cuarta Aumentada / Quinta Disminuida)',
+    'P5': 'Quinta Perfecta',
+    'm6': 'Sexta menor',
+    'M6': 'Sexta Mayor',
+    'm7': 'Séptima menor',
+    'M7': 'Séptima Mayor',
+};
+
+export const INTERVAL_COLORS: Record<IntervalName, string> = {
+    'R': 'bg-red-500',
+    'm2': 'bg-orange-500',
+    'M2': 'bg-yellow-500',
+    'm3': 'bg-green-500',
+    'M3': 'bg-teal-500',
+    'P4': 'bg-blue-500',
+    'TT': 'bg-indigo-500',
+    'P5': 'bg-purple-500',
+    'm6': 'bg-pink-500',
+    'M6': 'bg-rose-500',
+    'm7': 'bg-cyan-500',
+    'M7': 'bg-lime-500',
+};
 
 export interface Scale {
   name: ScaleName;
-  intervals: number[];
-  intervalNames: string[];
+  intervals: readonly number[];
+  intervalNames: readonly IntervalName[];
 }
 
-export const SCALES: Record<ScaleName, Scale> = {
-  'Jónico (Mayor)': {
-    name: 'Jónico (Mayor)',
-    intervals: [0, 2, 4, 5, 7, 9, 11],
-    intervalNames: ['T', '2M', '3M', '4J', '5J', '6M', '7M'],
-  },
-  'Dórico': {
-    name: 'Dórico',
-    intervals: [0, 2, 3, 5, 7, 9, 10],
-    intervalNames: ['T', '2M', '3m', '4J', '5J', '6M', '7m'],
-  },
-  'Frigio': {
-    name: 'Frigio',
-    intervals: [0, 1, 3, 5, 7, 8, 10],
-    intervalNames: ['T', '2m', '3m', '4J', '5J', '6m', '7m'],
-  },
-  'Lidio': {
-    name: 'Lidio',
-    intervals: [0, 2, 4, 6, 7, 9, 11],
-    intervalNames: ['T', '2M', '3M', '4A', '5J', '6M', '7M'],
-  },
-  'Mixolidio': {
-    name: 'Mixolidio',
-    intervals: [0, 2, 4, 5, 7, 9, 10],
-    intervalNames: ['T', '2M', '3M', '4J', '5J', '6M', '7m'],
-  },
-  'Eólico (Menor)': {
-    name: 'Eólico (Menor)',
-    intervals: [0, 2, 3, 5, 7, 8, 10],
-    intervalNames: ['T', '2M', '3m', '4J', '5J', '6m', '7m'],
-  },
-  'Locrio': {
-    name: 'Locrio',
-    intervals: [0, 1, 3, 5, 6, 8, 10],
-    intervalNames: ['T', '2m', '3m', '4J', '5d', '6m', '7m'],
-  },
-  'Pentatónica Menor': {
-    name: 'Pentatónica Menor',
-    intervals: [0, 3, 5, 7, 10],
-    intervalNames: ['T', '3m', '4J', '5J', '7m'],
-  },
-  'Pentatónica Mayor': {
-    name: 'Pentatónica Mayor',
-    intervals: [0, 2, 4, 7, 9],
-    intervalNames: ['T', '2M', '3M', '5J', '6M'],
-  },
-  'Blues': {
-      name: 'Blues',
-      intervals: [0, 3, 5, 6, 7, 10],
-      intervalNames: ['T', '3m', '4J', '4A/5d', '5J', '7m']
-  }
+export const SCALES = {
+  'Jónico (Mayor)': { name: 'Jónico (Mayor)', intervals: [0, 2, 4, 5, 7, 9, 11], intervalNames: ['R', 'M2', 'M3', 'P4', 'P5', 'M6', 'M7'] },
+  'Dórico': { name: 'Dórico', intervals: [0, 2, 3, 5, 7, 9, 10], intervalNames: ['R', 'M2', 'm3', 'P4', 'P5', 'M6', 'm7'] },
+  'Frigio': { name: 'Frigio', intervals: [0, 1, 3, 5, 7, 8, 10], intervalNames: ['R', 'm2', 'm3', 'P4', 'P5', 'm6', 'm7'] },
+  'Lidio': { name: 'Lidio', intervals: [0, 2, 4, 6, 7, 9, 11], intervalNames: ['R', 'M2', 'M3', 'TT', 'P5', 'M6', 'M7'] },
+  'Mixolidio': { name: 'Mixolidio', intervals: [0, 2, 4, 5, 7, 9, 10], intervalNames: ['R', 'M2', 'M3', 'P4', 'P5', 'M6', 'm7'] },
+  'Eólico (menor natural)': { name: 'Eólico (menor natural)', intervals: [0, 2, 3, 5, 7, 8, 10], intervalNames: ['R', 'M2', 'm3', 'P4', 'P5', 'm6', 'm7'] },
+  'Locrio': { name: 'Locrio', intervals: [0, 1, 3, 5, 6, 8, 10], intervalNames: ['R', 'm2', 'm3', 'P4', 'TT', 'm6', 'm7'] },
+  'Menor armónica': { name: 'Menor armónica', intervals: [0, 2, 3, 5, 7, 8, 11], intervalNames: ['R', 'M2', 'm3', 'P4', 'P5', 'm6', 'M7'] },
+  'Menor melódica': { name: 'Menor melódica', intervals: [0, 2, 3, 5, 7, 9, 11], intervalNames: ['R', 'M2', 'm3', 'P4', 'P5', 'M6', 'M7'] },
+  'Pentatónica Mayor': { name: 'Pentatónica Mayor', intervals: [0, 2, 4, 7, 9], intervalNames: ['R', 'M2', 'M3', 'P5', 'M6'] },
+  'Pentatónica menor': { name: 'Pentatónica menor', intervals: [0, 3, 5, 7, 10], intervalNames: ['R', 'm3', 'P4', 'P5', 'm7'] },
+  'Blues': { name: 'Blues', intervals: [0, 3, 5, 6, 7, 10], intervalNames: ['R', 'm3', 'P4', 'TT', 'P5', 'm7'] },
+} as const;
+
+export type ScaleName = keyof typeof SCALES;
+
+export type ChordQuality = 'Mayor' | 'menor' | 'disminuido' | 'aumentado' | 'Maj7' | 'm7' | '7' | 'm7b5' | 'dim7' | 'aum7';
+
+export interface Chord {
+    root: string;
+    quality: ChordQuality;
+    notes: string[];
+    degree: number;
+}
+
+export type ChordDisplayMode = 'all' | 4 | 5 | 6; // 'all' or root on string 4, 5, or 6
+
+export const MAJOR_CHORD_INTERVALS = [0, 4, 7]; // R, M3, P5
+
+export type CagedShapeName = 'C' | 'A' | 'G' | 'E' | 'D';
+export const CAGED_SHAPE_NAMES: CagedShapeName[] = ['C', 'A', 'G', 'E', 'D'];
+export const CAGED_COLORS: Record<CagedShapeName, { color: string, glow: string }> = {
+    'C': { color: 'bg-red-500', glow: 'ring-red-400' },
+    'A': { color: 'bg-blue-500', glow: 'ring-blue-400' },
+    'G': { color: 'bg-green-500', glow: 'ring-green-400' },
+    'E': { color: 'bg-yellow-500', glow: 'ring-yellow-400' },
+    'D': { color: 'bg-purple-500', glow: 'ring-purple-400' },
 };
 
-export const STANDARD_TUNING = ['E', 'A', 'D', 'G', 'B', 'E']; // From low to high string
-export const FRET_COUNT = 22;
-
-export const INTERVAL_COLORS: { [key: string]: string } = {
-  'T': 'bg-red-500', // Tónica
-  '2m': 'bg-yellow-500',
-  '2M': 'bg-yellow-400',
-  '3m': 'bg-green-500',
-  '3M': 'bg-green-400',
-  '4J': 'bg-cyan-500',
-  '4A': 'bg-cyan-400',
-  '5d': 'bg-blue-600',
-  '5J': 'bg-blue-500',
-  '6m': 'bg-indigo-500',
-  '6M': 'bg-indigo-400',
-  '7m': 'bg-purple-500',
-  '7M': 'bg-purple-400',
-  '4A/5d': 'bg-blue-700' // blue note
-};
+export const CIRCLE_OF_FIFTHS_KEYS = [
+  { major: 'C', minor: 'A', sig: '0', angle: 0 },
+  { major: 'G', minor: 'E', sig: '1#', angle: 30 },
+  { major: 'D', minor: 'B', sig: '2#', angle: 60 },
+  { major: 'A', minor: 'F#', sig: '3#', angle: 90 },
+  { major: 'E', minor: 'C#', sig: '4#', angle: 120 },
+  { major: 'B', minor: 'G#', sig: '5#', angle: 150 },
+  { major: 'F#', minor: 'D#', sig: '6#', angle: 180 },
+  { major: 'C#', minor: 'A#', sig: '7#', angle: 210 }, // enharmonic with Db
+  { major: 'G#', minor: 'F', sig: '5b', angle: 240 }, // enharmonic with Ab
+  { major: 'D#', minor: 'C', sig: '3b', angle: 270 }, // enharmonic with Eb
+  { major: 'A#', minor: 'G', sig: '2b', angle: 300 }, // enharmonic with Bb
+  { major: 'F', minor: 'D', sig: '1b', angle: 330 },
+] as const;
