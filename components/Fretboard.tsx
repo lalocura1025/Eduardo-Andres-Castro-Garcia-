@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { NOTES, FRET_COUNT, STANDARD_TUNING, Scale, IntervalName, INTERVAL_COLORS, Chord, ChordDisplayMode, ScaleName, SCALES, Theme } from '../constants';
+import { NOTES, FRET_COUNT, STANDARD_TUNING, Scale, IntervalName, INTERVAL_COLORS, Chord, ChordDisplayMode, ScaleName, Theme } from '../constants';
 import { getNoteOnFret, getInterval, CagedPosition } from '../services/musicTheory';
 
 interface FretboardProps {
@@ -24,6 +24,7 @@ interface FretboardProps {
 
 const FRET_MARKERS = [3, 5, 7, 9, 12, 15, 17, 19, 21];
 const DOUBLE_MARKERS = [12];
+const FRET_WIDTH = 90; // Ancho de cada espacio entre trastes
 
 export const Fretboard: React.FC<FretboardProps> = ({
   selectedRoot,
@@ -42,9 +43,9 @@ export const Fretboard: React.FC<FretboardProps> = ({
 
   const themeClasses = {
     dark: {
-      fretboardBg: 'bg-gradient-to-b from-amber-950 via-amber-900 to-amber-950',
+      fretboardBg: 'bg-gradient-to-r from-amber-950 via-amber-900 to-amber-950',
       fretColor: 'bg-gray-400',
-      stringColor: 'bg-gradient-to-r from-gray-400 via-gray-300 to-gray-400',
+      stringColor: 'bg-gradient-to-r from-gray-500 via-gray-400 to-gray-500',
       nutColor: 'bg-gray-100',
       markerColor: 'bg-gray-500/40',
       noteText: 'text-white',
@@ -53,9 +54,9 @@ export const Fretboard: React.FC<FretboardProps> = ({
       borderColor: 'border-gray-700',
     },
     light: {
-      fretboardBg: 'bg-gradient-to-b from-amber-800 via-amber-700 to-amber-800',
+      fretboardBg: 'bg-gradient-to-r from-amber-800 via-amber-700 to-amber-800',
       fretColor: 'bg-gray-500',
-      stringColor: 'bg-gradient-to-r from-gray-500 via-gray-400 to-gray-500',
+      stringColor: 'bg-gradient-to-r from-gray-600 via-gray-500 to-gray-600',
       nutColor: 'bg-gray-900',
       markerColor: 'bg-gray-600/30',
       noteText: 'text-gray-900',
@@ -108,132 +109,139 @@ export const Fretboard: React.FC<FretboardProps> = ({
 
   return (
     <div className={`p-6 rounded-xl shadow-2xl ${currentTheme.fretboardBg} ${currentTheme.borderColor} border-2 overflow-x-auto`}>
-      <div className="relative inline-block" style={{ width: `${(FRET_COUNT + 1) * 80 + 40}px` }}>
-        {/* Fret Numbers */}
-        <div className="flex mb-2">
-          <div className="w-[40px]"></div>
+      <div className="relative" style={{ width: `${(FRET_COUNT + 1) * FRET_WIDTH + 50}px`, minHeight: '300px' }}>
+        
+        {/* Fret Numbers - Arriba */}
+        <div className="flex mb-2" style={{ marginLeft: '50px' }}>
           {Array.from({ length: FRET_COUNT + 1 }).map((_, fret) => (
-            <div key={`fret-num-${fret}`} className={`w-[80px] text-center text-base ${currentTheme.fretNumberText}`}>
+            <div key={`fret-num-${fret}`} className={`text-center text-base ${currentTheme.fretNumberText}`} style={{ width: `${FRET_WIDTH}px` }}>
               {fret > 0 ? fret : ''}
             </div>
           ))}
         </div>
 
-        {/* Fretboard Container */}
-        <div className="relative" style={{ height: '240px' }}>
-          {/* Nut (Cejuela) */}
-          <div className={`absolute top-0 left-[38px] w-[4px] h-full ${currentTheme.nutColor} z-20 rounded-sm shadow-lg`}></div>
+        {/* Contenedor del mástil */}
+        <div className="relative" style={{ height: '240px', marginTop: '10px' }}>
           
-          {/* Frets (Trastes) */}
+          {/* Cejuela (Nut) - Línea vertical al inicio */}
+          <div className={`absolute top-0 left-[48px] h-full ${currentTheme.nutColor} z-20`} style={{ width: '4px' }}></div>
+          
+          {/* Trastes (Frets) - Líneas verticales */}
           {Array.from({ length: FRET_COUNT + 1 }).map((_, fret) => (
             <div 
               key={`fret-${fret}`} 
-              className={`absolute top-0 h-full ${currentTheme.fretColor} shadow-sm`}
+              className={`absolute top-0 h-full ${currentTheme.fretColor} z-10`}
               style={{ 
-                left: `${42 + fret * 80}px`,
-                width: fret === 0 ? '0px' : '3px'
+                left: `${50 + fret * FRET_WIDTH}px`,
+                width: fret === 0 ? '0px' : '2px'
               }}
             ></div>
           ))}
 
-          {/* Fret Markers (Puntos de posición) */}
-          {FRET_MARKERS.map(fret => {
-            const isDouble = DOUBLE_MARKERS.includes(fret);
-            return (
-              <div 
-                key={`marker-${fret}`} 
-                className="absolute flex justify-center items-center gap-6 w-[80px]"
-                style={{ 
-                  left: `${(fret - 0.5) * 80}px`,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 5
-                }}
-              >
-                <div className={`w-5 h-5 rounded-full ${currentTheme.markerColor} shadow-inner`}></div>
-                {isDouble && <div className={`w-5 h-5 rounded-full ${currentTheme.markerColor} shadow-inner`}></div>}
-              </div>
-            );
-          })}
+          {/* Marcadores de posición (dots) - Debajo del mástil */}
+          <div className="absolute" style={{ top: '250px', left: '50px', width: `${FRET_COUNT * FRET_WIDTH}px` }}>
+            {FRET_MARKERS.map(fret => {
+              const isDouble = DOUBLE_MARKERS.includes(fret);
+              return (
+                <div 
+                  key={`marker-${fret}`} 
+                  className="absolute flex justify-center items-center gap-4"
+                  style={{ 
+                    left: `${(fret - 0.5) * FRET_WIDTH - FRET_WIDTH/2}px`,
+                    width: `${FRET_WIDTH}px`
+                  }}
+                >
+                  <div className={`w-4 h-4 rounded-full ${currentTheme.markerColor}`}></div>
+                  {isDouble && <div className={`w-4 h-4 rounded-full ${currentTheme.markerColor}`}></div>}
+                </div>
+              );
+            })}
+          </div>
 
-          {/* Strings (Cuerdas) */}
+          {/* Cuerdas (Strings) - Líneas horizontales */}
           {tuningIndices.map((_, stringIndex) => {
-            const stringThickness = 1 + (5 - stringIndex) * 0.4;
+            const stringThickness = 1 + (5 - stringIndex) * 0.5;
             return (
               <div 
                 key={`string-${stringIndex}`} 
-                className="absolute left-0 w-full"
+                className={`absolute left-[50px] ${currentTheme.stringColor} z-5`}
                 style={{ 
                   top: `${20 + stringIndex * 40}px`,
-                  zIndex: 8
+                  width: `${FRET_COUNT * FRET_WIDTH}px`,
+                  height: `${stringThickness}px`
                 }}
-              >
-                <div 
-                  className={`w-full ${currentTheme.stringColor} shadow-sm`}
-                  style={{ height: `${stringThickness}px` }}
-                ></div>
-              </div>
+              ></div>
             );
           })}
 
-          {/* Notes (Notas) */}
+          {/* Notas - En el CENTRO de cada espacio entre trastes */}
           {tuningIndices.map((_, stringIndex) => (
             <div 
               key={`notes-on-string-${stringIndex}`} 
-              className="absolute left-0 w-full flex items-center"
+              className="absolute left-[50px] z-20"
               style={{ 
                 top: `${20 + stringIndex * 40}px`,
-                height: '40px',
-                zIndex: 10
+                width: `${FRET_COUNT * FRET_WIDTH}px`,
+                height: '40px'
               }}
             >
-              {Array.from({ length: FRET_COUNT + 1 }).map((_, fret) => {
-                const noteInfo = getNoteInfo(stringIndex, fret);
-                if (!noteInfo) return <div key={`${stringIndex}-${fret}`} className="w-[80px] h-full" />;
-                
-                let displayClass = '';
-                let noteLabel: string | null = noteInfo.intervalName;
-                const chordInfo = getChordNoteInfo(noteInfo.noteName);
-                const cagedInfo = getCagedNoteInfo(stringIndex, fret);
-                
-                if (comparisonData.isComparing) {
-                  const compInfo = getComparisonNoteInfo(noteInfo.noteName);
-                  if (compInfo) {
-                    displayClass = `${compInfo.color} opacity-100 shadow-lg`;
-                    noteLabel = compInfo.label;
-                  } else {
-                    displayClass = `opacity-20 ${noteInfo.color}`;
+              <div className="relative w-full h-full flex items-center">
+                {Array.from({ length: FRET_COUNT + 1 }).map((_, fret) => {
+                  const noteInfo = getNoteInfo(stringIndex, fret);
+                  if (!noteInfo) return null;
+                  
+                  let displayClass = '';
+                  let noteLabel: string | null = noteInfo.intervalName;
+                  const chordInfo = getChordNoteInfo(noteInfo.noteName);
+                  const cagedInfo = getCagedNoteInfo(stringIndex, fret);
+                  
+                  if (comparisonData.isComparing) {
+                    const compInfo = getComparisonNoteInfo(noteInfo.noteName);
+                    if (compInfo) {
+                      displayClass = `${compInfo.color} opacity-100 shadow-lg`;
+                      noteLabel = compInfo.label;
+                    } else {
+                      displayClass = `opacity-20 ${noteInfo.color}`;
+                    }
+                  } else if (isCagedActive) {
+                    if (cagedInfo.isInShape) {
+                      displayClass = `${noteInfo.color} opacity-100 shadow-lg`;
+                    } else {
+                      displayClass = `opacity-20 ${noteInfo.color}`;
+                    }
                   }
-                } else if (isCagedActive) {
-                  if (cagedInfo.isInShape) {
-                    displayClass = `${noteInfo.color} opacity-100 shadow-lg`;
-                  } else {
-                    displayClass = `opacity-20 ${noteInfo.color}`;
-                  }
-                }
-                else if (highlightedChord) {
-                  if (chordInfo.isChordNote) {
-                    displayClass = `${noteInfo.color} ring-4 ring-white shadow-2xl`;
-                    if (chordInfo.isChordRoot) {
-                      displayClass += ' scale-125';
+                  else if (highlightedChord) {
+                    if (chordInfo.isChordNote) {
+                      displayClass = `${noteInfo.color} ring-4 ring-white shadow-2xl`;
+                      if (chordInfo.isChordRoot) {
+                        displayClass += ' scale-125';
+                      }
+                    } else {
+                      displayClass = `opacity-15 ${noteInfo.color}`;
                     }
                   } else {
-                    displayClass = `opacity-15 ${noteInfo.color}`;
+                    displayClass = `${noteInfo.color} shadow-lg hover:scale-110 transition-transform`;
                   }
-                } else {
-                  displayClass = `${noteInfo.color} shadow-lg hover:scale-110 transition-transform`;
-                }
-                
-                return (
-                  <div key={`${stringIndex}-${fret}`} className="w-[80px] h-full flex justify-center items-center">
-                    <div className={`w-10 h-10 rounded-full flex justify-center items-center font-bold text-sm transition-all duration-200 ${displayClass}`}>
-                      <span className={noteInfo.isRoot ? currentTheme.noteTextRoot : currentTheme.noteText}>
-                        {noteLabel}
-                      </span>
+                  
+                  return (
+                    <div 
+                      key={`${stringIndex}-${fret}`} 
+                      className="absolute"
+                      style={{
+                        left: `${fret * FRET_WIDTH + FRET_WIDTH/2 - 20}px`,
+                        top: '50%',
+                        transform: 'translateY(-50%)'
+                      }}
+                    >
+                      <div className={`w-10 h-10 rounded-full flex justify-center items-center font-bold text-sm transition-all duration-200 ${displayClass}`}>
+                        <span className={noteInfo.isRoot ? currentTheme.noteTextRoot : currentTheme.noteText}>
+                          {noteLabel}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>
