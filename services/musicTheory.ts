@@ -1,5 +1,5 @@
 
-import { NOTES, Scale, Chord, ChordQuality, FRET_COUNT, STANDARD_TUNING, MAJOR_CHORD_INTERVALS, CagedShapeName, CAGED_SHAPE_NAMES } from '../constants';
+import { NOTES, Scale, Chord, ChordQuality, FRET_COUNT, STANDARD_TUNING, MAJOR_CHORD_INTERVALS, CagedShapeName, CAGED_SHAPE_NAMES, PROGRESSIONS, Progression } from '../constants';
 
 /**
  * Calculates the note on a specific fret of a string.
@@ -75,6 +75,37 @@ export const getDiatonicChords = (rootNote: string, scale: Scale, chordType: 'tr
     }
   }
   return chords;
+};
+
+export const getProgressionChords = (rootNote: string, progression: Progression): (Chord & { roman: string })[] => {
+    const rootIndex = NOTES.indexOf(rootNote as typeof NOTES[number]);
+    
+    return progression.degrees.map(degree => {
+        const noteIndex = (rootIndex + degree.offset) % 12;
+        const chordRoot = NOTES[noteIndex];
+        
+        // Build notes based on quality
+        let intervals: number[] = [];
+        // Simplified interval mapping for display purposes
+        switch(degree.quality) {
+            case 'Mayor': intervals = [0, 4, 7]; break;
+            case 'menor': intervals = [0, 3, 7]; break;
+            case 'Maj7': intervals = [0, 4, 7, 11]; break;
+            case 'm7': intervals = [0, 3, 7, 10]; break;
+            case '7': intervals = [0, 4, 7, 10]; break;
+            default: intervals = [0, 4, 7]; // Fallback
+        }
+        
+        const notes = intervals.map(i => NOTES[(noteIndex + i) % 12]);
+        
+        return {
+            root: chordRoot,
+            quality: degree.quality,
+            notes: notes,
+            degree: 0, // Not strictly needed for progression view
+            roman: degree.roman
+        };
+    });
 };
 
 export interface CagedPosition {

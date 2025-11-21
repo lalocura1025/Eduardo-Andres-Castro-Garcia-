@@ -20,6 +20,7 @@ function App() {
   const [highlightedChord, setHighlightedChord] = useState<ChordType | null>(null);
   const [inversion, setInversion] = useState(0);
   const [chordDisplayMode, setChordDisplayMode] = useState<ChordDisplayMode>('all');
+  const [voicingMask, setVoicingMask] = useState<number[] | null>(null); // Strings to show
   
   const [isCagedActive, setIsCagedActive] = useState(false);
   const [selectedCagedShapeIndex, setSelectedCagedShapeIndex] = useState<number | null>(0);
@@ -65,6 +66,13 @@ function App() {
           setSelectedCagedShapeIndex(index);
       }
   }, [selectedCagedShapeIndex]);
+
+  const handleSetHighlightedChord = (chord: ChordType | null) => {
+      setHighlightedChord(chord);
+      // If we clear the chord, also maybe clear voicing mask? 
+      // Keeping voicing mask active allows exploring scale with fewer strings too if we wanted,
+      // but primarily it is for chords.
+  };
   
   const cagedPositions = useMemo(() => getCagedPositions(selectedRoot), [selectedRoot]);
 
@@ -114,6 +122,7 @@ function App() {
                     highlightedChord={highlightedChord}
                     inversion={inversion}
                     chordDisplayMode={chordDisplayMode}
+                    voicingMask={voicingMask}
                     cagedPositions={cagedPositions}
                     isCagedActive={isCagedActive}
                     selectedCagedShapeIndex={selectedCagedShapeIndex}
@@ -127,15 +136,25 @@ function App() {
             rootNote={selectedRoot} 
             selectedScale={selectedScaleName}
             highlightedChord={highlightedChord}
-            setHighlightedChord={setHighlightedChord}
+            setHighlightedChord={handleSetHighlightedChord}
             onChordTypeChange={handleChordTypeChange}
             inversion={inversion}
             setInversion={setInversion}
             chordDisplayMode={chordDisplayMode}
             setChordDisplayMode={setChordDisplayMode}
+            voicingMask={voicingMask}
+            setVoicingMask={setVoicingMask}
             theme={theme}
         />
         
+        <CircleOfFifths 
+            theme={theme}
+            currentRoot={selectedRoot}
+            currentScaleName={selectedScaleName}
+            onKeyChange={handleKeyFromCircle}
+            onChordSelect={handleSetHighlightedChord}
+        />
+
         <CagedSelector 
             theme={theme}
             isActive={isCagedActive}
@@ -153,13 +172,6 @@ function App() {
             onScalesChange={setComparisonScales}
         />
         
-        <CircleOfFifths 
-            theme={theme}
-            currentRoot={selectedRoot}
-            currentScaleName={selectedScaleName}
-            onKeyChange={handleKeyFromCircle}
-        />
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <PracticeTracker theme={theme} />
             <MusicQuiz theme={theme} />

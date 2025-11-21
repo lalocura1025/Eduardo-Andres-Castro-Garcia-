@@ -1,7 +1,8 @@
 
 import React, { useMemo, useState } from 'react';
-import { SCALES, ScaleName, Chord as ChordType, ChordDisplayMode, Theme } from '../constants';
+import { SCALES, ScaleName, Chord as ChordType, ChordDisplayMode, Theme, VOICING_MASKS } from '../constants';
 import { getDiatonicChords } from '../services/musicTheory';
+import { playChordNotes } from '../services/audio';
 
 interface DiatonicChordSelectorProps {
   rootNote: string;
@@ -13,6 +14,8 @@ interface DiatonicChordSelectorProps {
   setInversion: (inversion: number) => void;
   chordDisplayMode: ChordDisplayMode;
   setChordDisplayMode: (mode: ChordDisplayMode) => void;
+  voicingMask: number[] | null;
+  setVoicingMask: (mask: number[] | null) => void;
   theme: Theme;
 }
 
@@ -62,7 +65,9 @@ const getChordName = (chord: ChordType) => {
 export const DiatonicChordSelector: React.FC<DiatonicChordSelectorProps> = ({ 
     rootNote, selectedScale, highlightedChord, setHighlightedChord,
     onChordTypeChange, inversion, setInversion,
-    chordDisplayMode, setChordDisplayMode, theme
+    chordDisplayMode, setChordDisplayMode, 
+    voicingMask, setVoicingMask,
+    theme
 }) => {
   const [chordType, setChordType] = useState<'triads' | 'sevenths'>('triads');
   const scale = SCALES[selectedScale];
@@ -72,6 +77,9 @@ export const DiatonicChordSelector: React.FC<DiatonicChordSelectorProps> = ({
   }, [rootNote, scale, chordType]);
   
   const handleChordClick = (chord: ChordType) => {
+    // Audio Feedback
+    playChordNotes(chord.notes);
+
     if (highlightedChord?.root === chord.root && highlightedChord?.quality === chord.quality) {
       setHighlightedChord(null); // Toggle off if the same chord is clicked
       setInversion(0);
@@ -91,8 +99,8 @@ export const DiatonicChordSelector: React.FC<DiatonicChordSelectorProps> = ({
   };
 
   const inversionLabels = chordType === 'triads'
-    ? ['Fundamental', '1ra Inversión', '2da Inversión']
-    : ['Fundamental', '1ra Inversión', '2da Inversión', '3ra Inversión'];
+    ? ['Fundamental', '1ra Inv', '2da Inv']
+    : ['Fundamental', '1ra Inv', '2da Inv', '3ra Inv'];
 
   const themeClasses = {
       dark: {
@@ -105,6 +113,7 @@ export const DiatonicChordSelector: React.FC<DiatonicChordSelectorProps> = ({
           buttonSelected: 'bg-cyan-500 text-gray-900 shadow-md scale-105 focus:ring-cyan-400',
           ringOffset: 'focus:ring-offset-gray-800',
           border: 'border-gray-700',
+          subHeader: 'text-cyan-300/80'
       },
       light: {
           bg: 'bg-white',
@@ -116,6 +125,7 @@ export const DiatonicChordSelector: React.FC<DiatonicChordSelectorProps> = ({
           buttonSelected: 'bg-cyan-500 text-gray-900 shadow-md scale-105 focus:ring-cyan-400',
           ringOffset: 'focus:ring-offset-white',
           border: 'border-gray-200',
+          subHeader: 'text-cyan-700/80'
       }
   }
   const currentTheme = themeClasses[theme];
@@ -130,17 +140,18 @@ export const DiatonicChordSelector: React.FC<DiatonicChordSelectorProps> = ({
     );
   }
 
-  const positionOptions: {label: string, value: ChordDisplayMode}[] = [
-      {label: 'Todas', value: 'all'},
-      {label: '6ª Cuerda', value: 6},
-      {label: '5ª Cuerda', value: 5},
-      {label: '4ª Cuerda', value: 4},
+  // Voicing options specifically for visualizing Drop 2 logic
+  const voicingOptions = [
+      { label: 'Full Mástil', mask: VOICING_MASKS.all },
+      { label: 'Drop 2 (1-4)', mask: VOICING_MASKS.drop2_high },
+      { label: 'Drop 2 (2-5)', mask: VOICING_MASKS.drop2_mid },
+      { label: 'Drop 2 (3-6)', mask: VOICING_MASKS.drop2_low },
   ];
 
   return (
     <div className={`${currentTheme.bg} p-4 rounded-lg shadow-lg transition-colors duration-300`}>
-        <div className="flex justify-between items-center mb-4">
-            <h3 className={`text-lg font-semibold ${currentTheme.title}`}>Acordes Diatónicos</h3>
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+            <h3 className={`text-lg font-semibold ${currentTheme.title}`}>Acordes Diatónicos <span className="text-xs font-normal opacity-70 block sm:inline">(Click para escuchar)</span></h3>
             {/* Chord Type Toggle */}
             <div className={`flex items-center ${currentTheme.toggleBg} rounded-full p-1`}>
                 <button 
@@ -183,42 +194,21 @@ export const DiatonicChordSelector: React.FC<DiatonicChordSelectorProps> = ({
       </div>
       
       {highlightedChord && (
-          <div className={`mt-6 border-t ${currentTheme.border} pt-4 space-y-4`}>
-              <div>
-                  <h4 className={`text-md font-semibold text-center ${currentTheme.title} mb-3`}>
-                      Inversiones para {getChordName(highlightedChord)}
+          <div className={`mt-6 border-t ${currentTheme.border} pt-4 flex flex-col md:flex-row gap-6`}>
+              
+              {/* Controls Group 1: Inversions */}
+              <div className="flex-1">
+                  <h4 className={`text-sm uppercase tracking-wide font-bold ${currentTheme.subHeader} mb-3 text-center md:text-left`}>
+                      Inversiones
                   </h4>
-                  <div className="flex flex-wrap justify-center gap-2">
+                  <div className="flex flex-wrap justify-center md:justify-start gap-2">
                       {inversionLabels.map((label, index) => (
                           <button 
                             key={index}
                             onClick={() => setInversion(index)}
                             className={`
-                                px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200
+                                px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors duration-200
                                 ${inversion === index 
-                                    ? 'bg-cyan-500 text-gray-900'
-                                    : currentTheme.button
-                                }
-                            `}
-                          >
-                              {label} ({highlightedChord.notes[index]})
-                          </button>
-                      ))}
-                  </div>
-              </div>
-
-              <div>
-                  <h4 className={`text-md font-semibold text-center ${currentTheme.title} mb-3`}>
-                      Posición del Bajo
-                  </h4>
-                  <div className="flex flex-wrap justify-center gap-2">
-                      {positionOptions.map(({label, value}) => (
-                          <button 
-                            key={value}
-                            onClick={() => setChordDisplayMode(value)}
-                            className={`
-                                px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200
-                                ${chordDisplayMode === value 
                                     ? 'bg-cyan-500 text-gray-900'
                                     : currentTheme.button
                                 }
@@ -227,6 +217,33 @@ export const DiatonicChordSelector: React.FC<DiatonicChordSelectorProps> = ({
                               {label}
                           </button>
                       ))}
+                  </div>
+              </div>
+
+              {/* Controls Group 2: Voicings / Drops */}
+              <div className="flex-1">
+                   <h4 className={`text-sm uppercase tracking-wide font-bold ${currentTheme.subHeader} mb-3 text-center md:text-left`}>
+                      Voicings & Drops
+                  </h4>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                      {voicingOptions.map((opt, idx) => {
+                          const isActive = (opt.mask === null && voicingMask === null) || (opt.mask === voicingMask);
+                          return (
+                            <button 
+                                key={idx}
+                                onClick={() => setVoicingMask(opt.mask)}
+                                className={`
+                                    px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors duration-200
+                                    ${isActive
+                                        ? 'bg-cyan-500 text-gray-900'
+                                        : currentTheme.button
+                                    }
+                                `}
+                            >
+                                {opt.label}
+                            </button>
+                          )
+                      })}
                   </div>
               </div>
           </div>
