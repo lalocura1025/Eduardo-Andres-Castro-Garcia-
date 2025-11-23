@@ -1,11 +1,7 @@
-
 import { NOTES, Scale, Chord, ChordQuality, FRET_COUNT, STANDARD_TUNING, MAJOR_CHORD_INTERVALS, CagedShapeName, CAGED_SHAPE_NAMES, PROGRESSIONS, Progression } from '../constants';
 
 /**
  * Calculates the note on a specific fret of a string.
- * @param stringNoteIndex - The index of the open string note from the NOTES array.
- * @param fretNumber - The number of the fret (0 for open string).
- * @returns The index of the resulting note in the NOTES array.
  */
 export const getNoteOnFret = (stringNoteIndex: number, fretNumber: number): number => {
   return (stringNoteIndex + fretNumber) % 12;
@@ -13,23 +9,98 @@ export const getNoteOnFret = (stringNoteIndex: number, fretNumber: number): numb
 
 /**
  * Calculates the interval in semitones between two notes.
- * @param rootNoteIndex - The index of the root note.
- * @param targetNoteIndex - The index of the target note.
- * @returns The interval in semitones (0-11).
  */
 export const getInterval = (rootNoteIndex: number, targetNoteIndex: number): number => {
   return (targetNoteIndex - rootNoteIndex + 12) % 12;
 };
 
 /**
+ * Constructs a chord object purely from root and intervals, ignoring current scale context.
+ */
+export const constructChord = (root: string, quality: ChordQuality, intervals: number[]): Chord => {
+    const rootIndex = NOTES.indexOf(root as typeof NOTES[number]);
+    const notes = intervals.map(interval => NOTES[(rootIndex + interval) % 12]);
+    
+    return {
+        root,
+        quality,
+        notes,
+        degree: 0 // Degree is irrelevant for non-diatonic construction
+    };
+};
+
+/**
+ * Parses a chord string (e.g., "Am6", "C#Maj7", "Em/G") into a Chord object.
+ */
+export const parseChord = (chordName: string): Chord | null => {
+    if (!chordName) return null;
+
+    // Handle slash chords (e.g., "Em/G") - just take the chord part for now, 
+    // though in a full implementation we'd handle the bass note inversion.
+    const parts = chordName.split('/');
+    const cleanName = parts[0]; 
+
+    // Regex to separate Root from Quality
+    // Matches: [A-G] followed optionally by # or b
+    const match = cleanName.match(/^([A-G][#b]?)(.*)$/);
+    if (!match) return null;
+
+    const root = match[1];
+    const qualityStr = match[2];
+
+    let quality: ChordQuality = 'Mayor'; // Default
+    let intervals = [0, 4, 7]; // Default Major
+
+    // Map common suffixes to qualities and intervals
+    switch (qualityStr) {
+        case '': 
+        case 'Maj': 
+            quality = 'Mayor'; intervals = [0, 4, 7]; break;
+        case 'm': 
+        case 'min':
+            quality = 'menor'; intervals = [0, 3, 7]; break;
+        case '7': 
+            quality = '7'; intervals = [0, 4, 7, 10]; break;
+        case 'Maj7': 
+        case 'maj7':
+            quality = 'Maj7'; intervals = [0, 4, 7, 11]; break;
+        case 'm7': 
+        case 'min7':
+            quality = 'm7'; intervals = [0, 3, 7, 10]; break;
+        case 'm6': 
+            quality = 'm6'; intervals = [0, 3, 7, 9]; break;
+        case '6': 
+            quality = '6'; intervals = [0, 4, 7, 9]; break;
+        case 'dim': 
+        case 'dim7': 
+        case '°':
+            quality = 'dim7'; intervals = [0, 3, 6, 9]; break;
+        case 'm7b5': 
+        case 'ø':
+            quality = 'm7b5'; intervals = [0, 3, 6, 10]; break;
+        case 'sus4': 
+            quality = 'sus4'; intervals = [0, 5, 7]; break;
+        case 'sus2': 
+            quality = 'sus2'; intervals = [0, 2, 7]; break;
+        case 'aug': 
+        case '+':
+            quality = 'aumentado'; intervals = [0, 4, 8]; break;
+        case '7b9':
+            quality = '7'; intervals = [0, 4, 7, 10, 13]; break; // Treat as 7 for base, extensions handled by generic logic if needed
+        default:
+            // Fallback heuristics
+            if (qualityStr.includes('m')) { quality = 'menor'; intervals = [0, 3, 7]; }
+            else if (qualityStr.includes('7')) { quality = '7'; intervals = [0, 4, 7, 10]; }
+            break;
+    }
+
+    return constructChord(root, quality, intervals);
+};
+
+/**
  * Calculates the diatonic chords for a given root note and scale.
- * @param rootNote - The root note of the scale.
- * @param scale - The scale object.
- * @param chordType - Whether to generate 'triads' or 'sevenths'.
- * @returns An array of Chord objects.
  */
 export const getDiatonicChords = (rootNote: string, scale: Scale, chordType: 'triads' | 'sevenths'): Chord[] => {
-  // This function is only designed for 7-note scales (diatonic)
   if (scale.intervals.length !== 7) {
     return [];
   }
@@ -86,14 +157,13 @@ export const getProgressionChords = (rootNote: string, progression: Progression)
         
         // Build notes based on quality
         let intervals: number[] = [];
-        // Simplified interval mapping for display purposes
         switch(degree.quality) {
             case 'Mayor': intervals = [0, 4, 7]; break;
             case 'menor': intervals = [0, 3, 7]; break;
             case 'Maj7': intervals = [0, 4, 7, 11]; break;
             case 'm7': intervals = [0, 3, 7, 10]; break;
             case '7': intervals = [0, 4, 7, 10]; break;
-            default: intervals = [0, 4, 7]; // Fallback
+            default: intervals = [0, 4, 7]; 
         }
         
         const notes = intervals.map(i => NOTES[(noteIndex + i) % 12]);
@@ -102,7 +172,7 @@ export const getProgressionChords = (rootNote: string, progression: Progression)
             root: chordRoot,
             quality: degree.quality,
             notes: notes,
-            degree: 0, // Not strictly needed for progression view
+            degree: 0, 
             roman: degree.roman
         };
     });
@@ -110,7 +180,7 @@ export const getProgressionChords = (rootNote: string, progression: Progression)
 
 export interface CagedPosition {
   shapeName: CagedShapeName;
-  notes: Set<string>; // 'stringIdx-fret'
+  notes: Set<string>;
 }
 
 export const getCagedPositions = (rootNote: string): CagedPosition[] => {
@@ -118,8 +188,7 @@ export const getCagedPositions = (rootNote: string): CagedPosition[] => {
     const majorChordNoteIndices = MAJOR_CHORD_INTERVALS.map(i => (rootNoteIndex + i) % 12);
     const tuningIndices = STANDARD_TUNING.slice().reverse().map(note => NOTES.indexOf(note as typeof NOTES[number]));
 
-    // 1. Find all major chord notes across the entire fretboard
-    const allMajorChordNotes = new Map<string, number>(); // key: 'stringIdx-fret', value: noteIndex
+    const allMajorChordNotes = new Map<string, number>(); 
     tuningIndices.forEach((stringNoteIndex, stringIdx) => {
         for (let fret = 0; fret <= FRET_COUNT; fret++) {
             const noteIndex = getNoteOnFret(stringNoteIndex, fret);
@@ -129,7 +198,6 @@ export const getCagedPositions = (rootNote: string): CagedPosition[] => {
         }
     });
 
-    // 2. Find all root note positions to use as anchors
     const rootNotePositions: { s: number, f: number }[] = [];
     allMajorChordNotes.forEach((noteIndex, key) => {
         if (noteIndex === rootNoteIndex) {
@@ -141,22 +209,18 @@ export const getCagedPositions = (rootNote: string): CagedPosition[] => {
 
     if (rootNotePositions.length === 0) return [];
     
-    // 3. Define the 5 positions based on fret ranges anchored by root notes
     const positions: CagedPosition[] = [];
     const fretRanges: { name: CagedShapeName, start: number, end: number }[] = [];
     
     let lastFret = -1;
-    // Iterate through root notes to define the start of each range
     for (const rootPos of rootNotePositions) {
         if (rootPos.f > lastFret) {
             if (fretRanges.length < 5) {
-                // Heuristic: each CAGED shape covers about 4-5 frets
                 fretRanges.push({ name: CAGED_SHAPE_NAMES[fretRanges.length], start: rootPos.f, end: rootPos.f + 4 });
-                lastFret = rootPos.f + 1; // Ensure next anchor is further down
+                lastFret = rootPos.f + 1; 
             } else break;
         }
     }
-    // Add C-shape-like position at the end wrapping around
      if (fretRanges.length > 0 && fretRanges.length < 5) {
         let startFret = fretRanges[fretRanges.length - 1].start + 3;
         while(fretRanges.length < 5) {
@@ -165,13 +229,10 @@ export const getCagedPositions = (rootNote: string): CagedPosition[] => {
         }
     }
 
-
-    // 4. Group all chord notes into the 5 fret ranges
     fretRanges.forEach(range => {
         const positionNotes = new Set<string>();
         allMajorChordNotes.forEach((_, key) => {
             const [, fret] = key.split('-').map(Number);
-            // Use a slightly wider net to catch notes just outside the main anchor
             const effectiveStart = range.start > 0 ? range.start -1 : 0;
             if (fret >= effectiveStart && fret <= range.end) {
                 positionNotes.add(key);
@@ -180,10 +241,100 @@ export const getCagedPositions = (rootNote: string): CagedPosition[] => {
         positions.push({ shapeName: range.name, notes: positionNotes });
     });
     
-    // Ensure we have exactly 5 positions, even if it means some are empty
     while (positions.length < 5) {
         positions.push({ shapeName: CAGED_SHAPE_NAMES[positions.length], notes: new Set() });
     }
     
     return positions.slice(0, 5);
+};
+
+export interface VoicingNote {
+    string: number; // 0 to 5 (high E to low E)
+    fret: number;
+    noteName: string;
+    interval: string;
+}
+
+// Algorithm to find playable shapes
+export const findVoicingPositions = (chord: Chord, mask: number[]): VoicingNote[][] => {
+    if (!mask || mask.length === 0) return [];
+
+    const tuningIndices = STANDARD_TUNING.slice().reverse().map(note => NOTES.indexOf(note as typeof NOTES[number]));
+    const rootIndex = NOTES.indexOf(chord.root as typeof NOTES[number]);
+
+    // 1. Map all possible locations of chord notes on the allowed strings
+    const candidates: { [stringIdx: number]: VoicingNote[] } = {};
+    
+    mask.forEach(stringIdx => {
+        candidates[stringIdx] = [];
+        const openNoteIndex = tuningIndices[stringIdx];
+        
+        // Scan frets 0-15
+        for (let fret = 0; fret <= 15; fret++) {
+            const currentNoteIndex = getNoteOnFret(openNoteIndex, fret);
+            const currentNoteName = NOTES[currentNoteIndex];
+            
+            if (chord.notes.includes(currentNoteName)) {
+                // Determine interval relative to root
+                let intervalIdx = getInterval(rootIndex, currentNoteIndex);
+                // Rough mapping back to interval names
+                candidates[stringIdx].push({
+                    string: stringIdx,
+                    fret: fret,
+                    noteName: currentNoteName,
+                    interval: '' 
+                });
+            }
+        }
+    });
+
+    // 2. Find combinations (One note per string in the mask)
+    const shapes: VoicingNote[][] = [];
+    
+    const search = (stringIndexIdx: number, currentShape: VoicingNote[]) => {
+        if (stringIndexIdx >= mask.length) {
+            shapes.push([...currentShape]);
+            return;
+        }
+
+        const currentStringIdx = mask[stringIndexIdx];
+        const possibleNotes = candidates[currentStringIdx];
+
+        for (const note of possibleNotes) {
+            let valid = true;
+            if (currentShape.length > 0) {
+                const minFret = Math.min(...currentShape.map(n => n.fret).filter(f => f > 0));
+                const maxFret = Math.max(...currentShape.map(n => n.fret).filter(f => f > 0));
+                
+                const newMin = note.fret > 0 ? Math.min(minFret, note.fret) : minFret;
+                const newMax = note.fret > 0 ? Math.max(maxFret, note.fret) : maxFret;
+
+                if ((newMax - newMin) > 4) valid = false; 
+            }
+
+            if (valid) {
+                search(stringIndexIdx + 1, [...currentShape, note]);
+            }
+        }
+    };
+
+    search(0, []);
+
+    // 3. Sort shapes by average fret (position on neck)
+    shapes.sort((a, b) => {
+        const avgA = a.reduce((sum, n) => sum + n.fret, 0) / a.length;
+        const avgB = b.reduce((sum, n) => sum + n.fret, 0) / b.length;
+        return avgA - avgB;
+    });
+    
+    // Filter: If it's a 7th chord and 4 strings, we strictly prefer shapes that have ALL 4 notes
+    if (chord.notes.length === 4 && mask.length === 4) {
+        const strictShapes = shapes.filter(shape => {
+            const uniqueNotes = new Set(shape.map(n => n.noteName));
+            return uniqueNotes.size === 4;
+        });
+        if (strictShapes.length > 0) return strictShapes;
+    }
+
+    return shapes;
 };

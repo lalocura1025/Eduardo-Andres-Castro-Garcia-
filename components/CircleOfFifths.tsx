@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CIRCLE_OF_FIFTHS_KEYS, ScaleName, Theme, PROGRESSIONS, Progression, Chord } from '../constants';
 import { getProgressionChords } from '../services/musicTheory';
@@ -10,10 +9,16 @@ interface CircleOfFifthsProps {
   onKeyChange: (root: string, scale: ScaleName) => void;
   onChordSelect: (chord: Chord | null) => void;
   theme: Theme;
+  // New Props for Looping
+  onStartLoop?: (chords: (Chord & { roman: string })[]) => void;
+  isLooping?: boolean;
 }
 
-export const CircleOfFifths: React.FC<CircleOfFifthsProps> = React.memo(({ currentRoot, currentScaleName, onKeyChange, onChordSelect, theme }) => {
+export const CircleOfFifths: React.FC<CircleOfFifthsProps> = React.memo(({ 
+    currentRoot, currentScaleName, onKeyChange, onChordSelect, theme, onStartLoop, isLooping 
+}) => {
   const [selectedProgressionIndex, setSelectedProgressionIndex] = useState<number | null>(null);
+  const [beatsPerChord, setBeatsPerChord] = useState(4); // Local state for control
 
   const themeClasses = {
     dark: {
@@ -45,20 +50,16 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = React.memo(({ curre
   };
   const currentTheme = themeClasses[theme];
 
-  const CIRCLE_RADIUS = 160; // in pixels
-  const KEY_ITEM_WIDTH = 90; // in pixels
+  const CIRCLE_RADIUS = 160; 
+  const KEY_ITEM_WIDTH = 90; 
 
   const handleProgressionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const val = e.target.value;
       setSelectedProgressionIndex(val === "" ? null : Number(val));
   };
 
-  // Determine base root for progression calculation
-  // If current scale is minor, treat currentRoot as the 'i'. If major, currentRoot is 'I'.
   const isMinorContext = currentScaleName.includes('menor') || currentScaleName.includes('Eólico');
   
-  // We calculate progression chords based on the selected Key in the circle. 
-  // Note: Progressions in constant are generic. getProgressionChords uses the root provided.
   const progressionChords = selectedProgressionIndex !== null 
       ? getProgressionChords(currentRoot, PROGRESSIONS[selectedProgressionIndex]) 
       : [];
@@ -78,7 +79,6 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = React.memo(({ curre
                 const isMajorSelected = currentRoot === key.major && currentScaleName === 'Jónico (Mayor)';
                 const isMinorSelected = currentRoot === key.minor && currentScaleName === 'Eólico (menor natural)';
                 
-                // Adjust math to center items
                 const angleRad = (key.angle - 90) * (Math.PI / 180);
                 const x = Math.cos(angleRad) * CIRCLE_RADIUS + (CIRCLE_RADIUS + KEY_ITEM_WIDTH/2);
                 const y = Math.sin(angleRad) * CIRCLE_RADIUS + (CIRCLE_RADIUS + KEY_ITEM_WIDTH/2);
@@ -94,7 +94,6 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = React.memo(({ curre
                 return (
                 <div key={key.major} style={keyWrapperStyle}>
                     <div className={`${currentTheme.keyBg} rounded-lg p-2 flex flex-col items-center shadow-md bg-opacity-90 backdrop-blur-sm`}>
-                    {/* Major Key */}
                     <button 
                         onClick={() => onKeyChange(key.major, 'Jónico (Mayor)')}
                         className={`
@@ -109,10 +108,8 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = React.memo(({ curre
                         {key.major}
                     </button>
 
-                    {/* Key Signature */}
                     <div className={`text-xs font-mono my-1 ${currentTheme.keySignatureText}`}>{key.sig}</div>
 
-                    {/* Minor Key */}
                     <button 
                         onClick={() => onKeyChange(key.minor, 'Eólico (menor natural)')}
                         className={`
@@ -152,27 +149,61 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = React.memo(({ curre
                 </select>
 
                 {selectedProgressionIndex !== null && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {progressionChords.map((chord, i) => (
+                    <>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+                            {progressionChords.map((chord, i) => {
+                                const isActive = isLooping && progressionChords.indexOf(chord) === 0; // Simplified visual check, improved in App
+                                return (
+                                <button 
+                                    key={i}
+                                    onClick={() => {
+                                        playChordNotes(chord.notes);
+                                        onChordSelect(chord);
+                                    }}
+                                    className={`p-2 rounded text-center transition-transform hover:scale-105 active:scale-95 flex flex-col items-center justify-center border-2 border-transparent
+                                        ${isActive ? 'border-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]' : ''}
+                                        ${theme === 'dark' ? 'bg-cyan-900/50 hover:bg-cyan-800 text-cyan-100' : 'bg-cyan-100 hover:bg-cyan-200 text-cyan-900'}
+                                    `}
+                                >
+                                    <span className="text-xs opacity-70 font-bold mb-1">{chord.roman}</span>
+                                    <span className="font-bold text-sm">{chord.root}{chord.quality === 'Mayor' ? '' : (chord.quality === 'menor' ? 'm' : chord.quality)}</span>
+                                </button>
+                                );
+                            })}
+                        </div>
+                        
+                        <div className="flex gap-2 items-center mb-2">
+                             <label className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Compases por Acorde:</label>
+                             <select 
+                                value={beatsPerChord} 
+                                onChange={(e) => setBeatsPerChord(Number(e.target.value))}
+                                className={`p-1 rounded text-xs ${currentTheme.select}`}
+                             >
+                                 <option value={2}>2</option>
+                                 <option value={4}>4</option>
+                                 <option value={8}>8</option>
+                             </select>
+                        </div>
+
+                        {/* Start Loop Button */}
+                        {onStartLoop && (
                             <button 
-                                key={i}
-                                onClick={() => {
-                                    playChordNotes(chord.notes);
-                                    onChordSelect(chord);
-                                }}
-                                className={`p-2 rounded text-center transition-transform hover:scale-105 active:scale-95 flex flex-col items-center justify-center
-                                    ${theme === 'dark' ? 'bg-cyan-900/50 hover:bg-cyan-800 text-cyan-100' : 'bg-cyan-100 hover:bg-cyan-200 text-cyan-900'}
+                                onClick={() => onStartLoop(progressionChords)}
+                                disabled={isLooping}
+                                className={`w-full py-3 rounded font-bold uppercase tracking-wider shadow-lg transition-all
+                                    ${isLooping 
+                                        ? 'bg-green-600 text-white cursor-default animate-pulse ring-2 ring-green-400' 
+                                        : 'bg-emerald-600 hover:bg-emerald-500 text-white hover:scale-105'}
                                 `}
                             >
-                                <span className="text-xs opacity-70 font-bold mb-1">{chord.roman}</span>
-                                <span className="font-bold text-sm">{chord.root}{chord.quality === 'Mayor' ? '' : (chord.quality === 'menor' ? 'm' : chord.quality)}</span>
+                                {isLooping ? '🔄 Reproduciendo Bucle...' : '▶️ Practicar en Bucle'}
                             </button>
-                        ))}
-                    </div>
+                        )}
+                    </>
                 )}
              </div>
              <div className={`text-xs italic text-center ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
-                 Tip: Haz click en los acordes para verlos en el mástil.
+                 Tip: Activa el bucle para practicar improvisación continua.
              </div>
           </div>
 

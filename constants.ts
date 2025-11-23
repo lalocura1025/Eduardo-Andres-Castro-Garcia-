@@ -65,7 +65,11 @@ export const SCALES = {
 
 export type ScaleName = keyof typeof SCALES;
 
-export type ChordQuality = 'Mayor' | 'menor' | 'disminuido' | 'aumentado' | 'Maj7' | 'm7' | '7' | 'm7b5' | 'dim7' | 'aum7';
+// Extended types to support "Universal" chords
+export type ChordQuality = 
+    'Mayor' | 'menor' | 'disminuido' | 'aumentado' | 
+    'Maj7' | 'm7' | '7' | 'm7b5' | 'dim7' | 'aum7' | 
+    'sus2' | 'sus4' | '6' | 'm6' | 'add9' | '7alt';
 
 export interface Chord {
     root: string;
@@ -74,7 +78,7 @@ export interface Chord {
     degree: number;
 }
 
-export type ChordDisplayMode = 'all' | 4 | 5 | 6; // 'all' or root on string 4, 5, or 6
+export type ChordDisplayMode = 'all' | 4 | 5 | 6;
 
 export const MAJOR_CHORD_INTERVALS = [0, 4, 7]; 
 
@@ -105,7 +109,7 @@ export const CIRCLE_OF_FIFTHS_KEYS = [
 
 export interface Progression {
     name: string;
-    degrees: { roman: string, quality: ChordQuality, offset: number }[]; // offset is semitones from root
+    degrees: { roman: string, quality: ChordQuality, offset: number }[];
     mode: 'Major' | 'Minor';
 }
 
@@ -146,7 +150,7 @@ export const PROGRESSIONS: Progression[] = [
             { roman: 'i', quality: 'menor', offset: 0 },
             { roman: 'bVII', quality: 'Mayor', offset: 10 },
             { roman: 'bVI', quality: 'Mayor', offset: 8 },
-            { roman: 'V7', quality: '7', offset: 7 } // Phrygian dominant feel
+            { roman: 'V7', quality: '7', offset: 7 }
         ]
     },
     {
@@ -162,11 +166,61 @@ export const PROGRESSIONS: Progression[] = [
     }
 ];
 
-// String sets for Voicings (0-indexed, 0 is High E, 5 is Low E)
-// Drop 2 typically uses 4 strings.
 export const VOICING_MASKS = {
-    'all': null, // Show all
-    'drop2_high': [0, 1, 2, 3], // E B G D
-    'drop2_mid': [1, 2, 3, 4], // B G D A
-    'drop2_low': [2, 3, 4, 5]  // G D A E
+    'all': null, 
+    'drop2_high': [0, 1, 2, 3], 
+    'drop2_mid': [1, 2, 3, 4], 
+    'drop2_low': [2, 3, 4, 5] 
 };
+
+// --- UNIVERSAL CHORD DEFINITIONS FOR EXPLORER ---
+export interface ChordFamilyDef {
+    label: string;
+    color: string;
+    chords: {
+        quality: ChordQuality;
+        intervals: number[];
+        suggestedScales: ScaleName[];
+    }[];
+}
+
+export const CHORD_FAMILIES: ChordFamilyDef[] = [
+    {
+        label: 'Familia Mayor',
+        color: 'text-rose-400',
+        chords: [
+            { quality: 'Mayor', intervals: [0, 4, 7], suggestedScales: ['Jónico (Mayor)', 'Lidio'] },
+            { quality: 'Maj7', intervals: [0, 4, 7, 11], suggestedScales: ['Jónico (Mayor)', 'Lidio'] },
+            { quality: '6', intervals: [0, 4, 7, 9], suggestedScales: ['Jónico (Mayor)', 'Pentatónica Mayor'] },
+            { quality: 'add9', intervals: [0, 4, 7, 14], suggestedScales: ['Jónico (Mayor)', 'Lidio'] },
+        ]
+    },
+    {
+        label: 'Familia Menor',
+        color: 'text-blue-400',
+        chords: [
+            { quality: 'menor', intervals: [0, 3, 7], suggestedScales: ['Eólico (menor natural)', 'Dórico', 'Pentatónica menor'] },
+            { quality: 'm7', intervals: [0, 3, 7, 10], suggestedScales: ['Dórico', 'Eólico (menor natural)'] },
+            { quality: 'm6', intervals: [0, 3, 7, 9], suggestedScales: ['Dórico', 'Menor melódica'] },
+            { quality: 'm7b5', intervals: [0, 3, 6, 10], suggestedScales: ['Locrio'] },
+        ]
+    },
+    {
+        label: 'Familia Dominante',
+        color: 'text-amber-400',
+        chords: [
+            { quality: '7', intervals: [0, 4, 7, 10], suggestedScales: ['Mixolidio', 'Blues', 'Lidia Dominante'] },
+            { quality: 'sus4', intervals: [0, 5, 7], suggestedScales: ['Mixolidio', 'Pentatónica Mayor'] },
+            { quality: '7alt', intervals: [0, 4, 8, 10], suggestedScales: ['Alterada (Super Locria)'] }, // Simplified visualization
+        ]
+    },
+    {
+        label: 'Tensión / Otros',
+        color: 'text-purple-400',
+        chords: [
+            { quality: 'sus2', intervals: [0, 2, 7], suggestedScales: ['Jónico (Mayor)', 'Mixolidio'] },
+            { quality: 'dim7', intervals: [0, 3, 6, 9], suggestedScales: ['Menor armónica'] }, // vii° implies Harmonic Minor context often
+            { quality: 'aumentado', intervals: [0, 4, 8], suggestedScales: ['Menor melódica'] }, // Often Lydian Augmented context (Mode 3 Melodic Minor)
+        ]
+    }
+];
