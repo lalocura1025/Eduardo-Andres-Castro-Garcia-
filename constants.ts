@@ -56,6 +56,7 @@ export const SCALES = {
   'Locrio': { name: 'Locrio', intervals: [0, 1, 3, 5, 6, 8, 10], intervalNames: ['R', 'm2', 'm3', 'P4', 'TT', 'm6', 'm7'] },
   'Menor armónica': { name: 'Menor armónica', intervals: [0, 2, 3, 5, 7, 8, 11], intervalNames: ['R', 'M2', 'm3', 'P4', 'P5', 'm6', 'M7'] },
   'Menor melódica': { name: 'Menor melódica', intervals: [0, 2, 3, 5, 7, 9, 11], intervalNames: ['R', 'M2', 'm3', 'P4', 'P5', 'M6', 'M7'] },
+      'Menor Arm. & Mel. (Fusión)': { name: 'Menor Arm. & Mel. (Fusión)', intervals: [0, 2, 3, 5, 7, 8, 9, 11], intervalNames: ['R', 'M2', 'm3', 'P4', 'P5', 'm6', 'M6', 'M7'] },
   'Lidia Dominante': { name: 'Lidia Dominante', intervals: [0, 2, 4, 6, 7, 9, 10], intervalNames: ['R', 'M2', 'M3', 'TT', 'P5', 'M6', 'm7'] },
   'Alterada (Super Locria)': { name: 'Alterada (Super Locria)', intervals: [0, 1, 3, 4, 6, 8, 10], intervalNames: ['R', 'm2', 'm3', 'M3', 'TT', 'm6', 'm7'] },
   'Pentatónica Mayor': { name: 'Pentatónica Mayor', intervals: [0, 2, 4, 7, 9], intervalNames: ['R', 'M2', 'M3', 'P5', 'M6'] },
