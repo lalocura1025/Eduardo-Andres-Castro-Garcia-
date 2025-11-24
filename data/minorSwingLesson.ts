@@ -14,8 +14,8 @@ export const MINOR_SWING_LESSON: LessonEvent[] = [
   // --- Introducción / A (Tónica) ---
   { 
     startTime: 0, endTime: BAR_MS * 2, 
-    root: 'A', scaleName: 'Menor melódica', 
-    description: "Compases 1-2: Am6. Usa la Escala Menor Melódica de A." 
+    root: 'A', scaleName: 'Menor Arm. & Mel. (Fusión)', 
+    description: "Compases 1-2: Am6. Usa la Escala Menor Arm. & Mel. (Fusión) de A." 
   },
   // --- Subdominante (Dm) ---
   { 
@@ -32,7 +32,7 @@ export const MINOR_SWING_LESSON: LessonEvent[] = [
   // --- Resolución breve (Am) ---
   { 
     startTime: BAR_MS * 5, endTime: BAR_MS * 6, 
-    root: 'A', scaleName: 'Menor melódica', 
+    root: 'A', scaleName: 'Menor Arm. & Mel. (Fusión)', 
     description: "Compás 6: Breve descanso en Am." 
   },
   // --- Dm rápido ---
@@ -44,7 +44,7 @@ export const MINOR_SWING_LESSON: LessonEvent[] = [
   // --- Am rápido ---
   { 
     startTime: BAR_MS * 7, endTime: BAR_MS * 8, 
-    root: 'A', scaleName: 'Menor melódica', 
+    root: 'A', scaleName: 'Menor Arm. & Mel. (Fusión)', 
     description: "Compás 8: Vuelta a Am." 
   },
   // --- Turnaround (E7) ---
